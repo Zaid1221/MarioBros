@@ -6,6 +6,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -27,6 +28,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.zaid.mariobros.MarioBros;
 import com.zaid.mariobros.Scenes.Hud;
 import com.zaid.mariobros.Sprites.Mario;
+import com.zaid.mariobros.Tools.B2WorldCreator;
 
 import static sun.audio.AudioPlayer.player;
 
@@ -35,8 +37,11 @@ import static sun.audio.AudioPlayer.player;
  */
 
 public class PlayScreen implements Screen {
-
+    //reference to our game, used to set screens
     private MarioBros game;
+    private TextureAtlas atlas;
+
+    //basic playscreen varaibles
     Texture texture;
     private OrthographicCamera gamecam;
     private Viewport gamePort;
@@ -51,12 +56,21 @@ public class PlayScreen implements Screen {
     private World world;
     private Box2DDebugRenderer b2dr;
 
+    //sprites
     private Mario player;
 
     public PlayScreen(MarioBros game) {
+        atlas = new TextureAtlas("Mario_and_Enemies.pack");
+
         this.game = game;
+
+        //create cam used to follow mario through cam world
         gamecam = new OrthographicCamera();
+
+        //create a fitViewport to maintain virtuaal aspect ratio despite screen size
         gamePort = new FitViewport(MarioBros.V_WIDTH / MarioBros.PPM, MarioBros.V_HEIGHT / MarioBros.PPM, gamecam);
+
+        //create our game HUD for scores/timers and level info
         hud = new Hud(game.batch);
 
         //load our map and setup map renderer
@@ -67,70 +81,20 @@ public class PlayScreen implements Screen {
         //instially sey out gamecam to be center
         gamecam.position.set(gamePort.getWorldWidth() / 2, gamePort.getWorldHeight() / 2, 0);
 
+        //create our box2d world, setting no gravity in x, -10 gravity to y and allow
         world = new World(new Vector2(0, -10), true);
+
+        //allows for debug lines of our box2d world
         b2dr = new Box2DDebugRenderer();
-        player = new Mario(world);
 
-        BodyDef bdef = new BodyDef();
-        PolygonShape shape = new PolygonShape();
-        FixtureDef fdef = new FixtureDef();
-        Body body;
+        new B2WorldCreator(world, map);
 
-        //create ground bodies/fixtures
-        for(MapObject object : map.getLayers().get(2).getObjects().getByType(RectangleMapObject.class)){
-            Rectangle rect = ((RectangleMapObject) object).getRectangle();
+        //create mario in our game world
+        player = new Mario(world, this);
+    }
 
-            bdef.type = BodyDef.BodyType.StaticBody;
-            bdef.position.set((rect.getX() + rect.getWidth() / 2) / MarioBros.PPM, (rect.getY() + rect.getHeight() / 2) / MarioBros.PPM);
-
-            body = world.createBody(bdef);
-
-            shape.setAsBox(rect.getWidth() / 2 / MarioBros.PPM, rect.getHeight() / 2 / MarioBros.PPM);
-            fdef.shape = shape;
-            body.createFixture(fdef);
-        }
-
-        //create pipe bodies/fixtures
-        for(MapObject object : map.getLayers().get(3).getObjects().getByType(RectangleMapObject.class)){
-            Rectangle rect = ((RectangleMapObject) object).getRectangle();
-
-            bdef.type = BodyDef.BodyType.StaticBody;
-            bdef.position.set((rect.getX() + rect.getWidth() / 2) / MarioBros.PPM, (rect.getY() + rect.getHeight() / 2) / MarioBros.PPM);
-
-            body = world.createBody(bdef);
-
-            shape.setAsBox(rect.getWidth() / 2 / MarioBros.PPM, rect.getHeight() / 2 / MarioBros.PPM);
-            fdef.shape = shape;
-            body.createFixture(fdef);
-        }
-
-        //create brick bodies/fixtures
-        for(MapObject object : map.getLayers().get(5).getObjects().getByType(RectangleMapObject.class)){
-            Rectangle rect = ((RectangleMapObject) object).getRectangle();
-
-            bdef.type = BodyDef.BodyType.StaticBody;
-            bdef.position.set((rect.getX() + rect.getWidth() / 2) / MarioBros.PPM, (rect.getY() + rect.getHeight() / 2) / MarioBros.PPM);
-
-            body = world.createBody(bdef);
-
-            shape.setAsBox(rect.getWidth() / 2 / MarioBros.PPM, rect.getHeight() / 2 / MarioBros.PPM);
-            fdef.shape = shape;
-            body.createFixture(fdef);
-        }
-
-        //create coin bodies/fixtures
-        for(MapObject object : map.getLayers().get(4).getObjects().getByType(RectangleMapObject.class)){
-            Rectangle rect = ((RectangleMapObject) object).getRectangle();
-
-            bdef.type = BodyDef.BodyType.StaticBody;
-            bdef.position.set((rect.getX() + rect.getWidth() / 2) / MarioBros.PPM, (rect.getY() + rect.getHeight() / 2) / MarioBros.PPM);
-
-            body = world.createBody(bdef);
-
-            shape.setAsBox(rect.getWidth() / 2 / MarioBros.PPM, rect.getHeight() / 2 / MarioBros.PPM);
-            fdef.shape = shape;
-            body.createFixture(fdef);
-        }
+    public TextureAtlas getAtlas(){
+        return atlas;
     }
 
     @Override
@@ -145,7 +109,7 @@ public class PlayScreen implements Screen {
         if(Gdx.input.isKeyPressed(Input.Keys.RIGHT) && (player.b2body.getLinearVelocity().x <= 2))
             player.b2body.applyLinearImpulse(new Vector2(0.1f, 0), player.b2body.getWorldCenter(), true);
 
-        if(Gdx.input.isKeyJustPressed(Input.Keys.LEFT) && (player.b2body.getLinearVelocity().x >= -2))
+        if(Gdx.input.isKeyPressed(Input.Keys.LEFT) && (player.b2body.getLinearVelocity().x >= -2))
             player.b2body.applyLinearImpulse(new Vector2(-0.1f, 0), player.b2body.getWorldCenter(), true);
     }
 
@@ -154,6 +118,8 @@ public class PlayScreen implements Screen {
         handleInput(dt);
 
         world.step(1/60f, 6, 2);
+
+        player.update(dt);
 
         gamecam.position.x = player.b2body.getPosition().x;
 
@@ -176,6 +142,11 @@ public class PlayScreen implements Screen {
 
         //renderer our Box2dDebugLines
         b2dr.render(world, gamecam.combined);
+
+        game.batch.setProjectionMatrix(gamecam.combined);
+        game.batch.begin();
+        player.draw(game.batch);
+        game.batch.end();
 
         //set our batch to now draw what the hud camera sees
         game.batch.setProjectionMatrix(hud.stage.getCamera().combined);
@@ -204,6 +175,10 @@ public class PlayScreen implements Screen {
 
     @Override
     public void dispose() {
-
+        map.dispose();
+        renderer.dispose();
+        world.dispose();
+        b2dr.dispose();
+        hud.dispose();
     }
 }
