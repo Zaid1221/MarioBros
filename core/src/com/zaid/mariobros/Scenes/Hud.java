@@ -23,10 +23,10 @@ public class Hud implements Disposable {
 
     private Integer worldTimer; //start timer
     private float timeCount; //decrements timer
-    private Integer score; //score of the player
+    private static Integer score; //score of the player
 
     Label countdownLabel;
-    Label scoreLabel;
+    static Label scoreLabel;
     Label timeLabel;
     Label levelLabel;
     Label worldLabel;
@@ -66,6 +66,21 @@ public class Hud implements Disposable {
 
         //adds our table to the stage
         stage.addActor(table);
+    }
+
+    public void update(float dt){
+        timeCount += dt;
+        if(timeCount >= 1){
+            worldTimer--;
+            countdownLabel.setText(String.format("%03d", worldTimer));
+            timeCount = 0;
+        }
+    }
+
+    public static void addScore(int value)
+    {
+        score += value;
+        scoreLabel.setText(String.format("%06d", score));
     }
 
     @Override
