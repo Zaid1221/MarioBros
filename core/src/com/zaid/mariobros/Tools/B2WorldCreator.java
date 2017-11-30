@@ -25,10 +25,10 @@ public class B2WorldCreator {
         Body body;
 
         //create ground bodies/fixtures
-        for(MapObject object : map.getLayers().get(2).getObjects().getByType(RectangleMapObject.class)){
+        for(MapObject object : map.getLayers().get(2).getObjects().getByType(RectangleMapObject.class)){ //gets the ground from the layer in tiled program
             Rectangle rect = ((RectangleMapObject) object).getRectangle();
 
-            bdef.type = BodyDef.BodyType.StaticBody;
+            bdef.type = BodyDef.BodyType.StaticBody; //makes the ground immobile
             bdef.position.set((rect.getX() + rect.getWidth() / 2) / MarioBros.PPM, (rect.getY() + rect.getHeight() / 2) / MarioBros.PPM);
 
             body = world.createBody(bdef);
@@ -39,7 +39,7 @@ public class B2WorldCreator {
         }
 
         //create pipe bodies/fixtures
-        for(MapObject object : map.getLayers().get(3).getObjects().getByType(RectangleMapObject.class)){
+        for(MapObject object : map.getLayers().get(3).getObjects().getByType(RectangleMapObject.class)){  //gets the pipe from the layer in tiled program
             Rectangle rect = ((RectangleMapObject) object).getRectangle();
 
             bdef.type = BodyDef.BodyType.StaticBody;
@@ -53,14 +53,14 @@ public class B2WorldCreator {
         }
 
         //create brick bodies/fixtures
-        for(MapObject object : map.getLayers().get(5).getObjects().getByType(RectangleMapObject.class)){
+        for(MapObject object : map.getLayers().get(5).getObjects().getByType(RectangleMapObject.class)){  //gets the brick from the layer in tiled program
             Rectangle rect = ((RectangleMapObject) object).getRectangle();
 
             new Brick(world, map, rect);
         }
 
         //create coin bodies/fixtures
-        for(MapObject object : map.getLayers().get(4).getObjects().getByType(RectangleMapObject.class)){
+        for(MapObject object : map.getLayers().get(4).getObjects().getByType(RectangleMapObject.class)){  //gets the coin from the layer in tiled program
             Rectangle rect = ((RectangleMapObject) object).getRectangle();
 
             new Coin(world, map, rect);
